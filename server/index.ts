@@ -319,6 +319,7 @@ async function startTurn(botId: string, text: string) {
 function configStatus() {
   return {
     xai: { configured: Boolean(cfg.xai?.key) },
+    custom: { configured: Boolean(cfg.custom?.key), url: cfg.custom?.url },
     composio: { configured: Boolean(cfg.composio?.key), apiKeyConfigured: Boolean(cfg.composio?.apiKey) },
     box: { configured: Boolean(cfg.box?.token) },
   };
@@ -491,7 +492,7 @@ const server = createServer(async (req, res) => {
     if ((method === "PUT" || method === "PATCH") && path === "/api/config") {
       const body = await readBody(req);
       const patch: Record<string, object> = {};
-      for (const key of ["xai", "composio", "box"] as const) {
+      for (const key of ["xai", "custom", "composio", "box"] as const) {
         if (body[key] && typeof body[key] === "object") patch[key] = body[key];
       }
       if (!Object.keys(patch).length) return json(res, 400, { error: "nothing to save" });

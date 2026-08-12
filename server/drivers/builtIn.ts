@@ -5,10 +5,12 @@ import { BoxAgentDriver } from "./boxagent.ts";
 import { ClaudeDriver } from "./claude.ts";
 import { CodexDriver } from "./codex.ts";
 import { GrokDriver } from "./grok.ts";
+import { CustomApiDriver } from "./custom.ts";
 
 export const BUILT_IN_DRIVERS: readonly AnyProviderDriver[] = [
   GrokDriver,
   ClaudeDriver,
   CodexDriver,
   BoxAgentDriver,
+  CustomApiDriver,
 ];

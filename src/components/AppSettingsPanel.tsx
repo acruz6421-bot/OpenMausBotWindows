@@ -36,6 +36,18 @@ export function AppSettingsPanel() {
               placeholder="ak_…  unlocks the full app catalog"
             />
             <ApiKeyRow section="box" label="Box token" placeholder="Token from box.ascii.dev" />
+            <div className="my-2 border-t border-hairline/20" />
+            <div className="text-[14px] font-medium text-ink">Custom OpenAI-compatible API</div>
+            <ApiKeyRow 
+              section="customUrl" 
+              label="API Base URL" 
+              placeholder="http://localhost:11434/v1 (e.g. Ollama)" 
+            />
+            <ApiKeyRow 
+              section="custom" 
+              label="API Key" 
+              placeholder="sk-… (use 'no-key' for local models)" 
+            />
           </div>
         </div>
       </div>

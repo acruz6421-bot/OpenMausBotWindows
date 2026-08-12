@@ -9,6 +9,7 @@ import type { InstanceConfigMap } from "./contracts.ts";
 
 export interface AppConfig {
   xai?: { key?: string; url?: string };
+  custom?: { key?: string; url?: string };
   /** key = ck_… Connect consumer key (connections + agent tools);
    * apiKey = ak_… project API key — optional, unlocks the full toolkit
    * catalog with official logos in the plugins marketplace. */
@@ -43,6 +44,7 @@ export function loadConfig(): AppConfig {
     /* first run — env fallbacks below */
   }
   cfg.xai = { key: process.env.XAI_API_KEY, ...cfg.xai };
+  cfg.custom = { key: process.env.CUSTOM_API_KEY, url: process.env.CUSTOM_API_URL, ...cfg.custom };
   cfg.composio = { key: process.env.COMPOSIO_KEY, ...cfg.composio };
   cfg.box = { token: process.env.BOX_TOKEN, ...cfg.box };
   return cfg;
@@ -58,7 +60,7 @@ export function saveConfig(patch: Partial<AppConfig>): void {
   } catch {
     /* first write */
   }
-  for (const key of ["xai", "composio", "box"] as const) {
+  for (const key of ["xai", "custom", "composio", "box"] as const) {
     if (patch[key] && typeof patch[key] === "object") {
       disk[key] = { ...(disk[key] as object), ...patch[key] };
     }
@@ -82,10 +84,13 @@ export function instanceConfigs(cfg: AppConfig): InstanceConfigMap {
           claude: { driver: "claudeAgent" },
           codex: { driver: "codex" },
           computer: { driver: "boxAgent" },
+          custom: { driver: "customApi" },
         };
   for (const entry of Object.values(map)) {
     entry.environment = {
       ...(cfg.xai?.key ? { XAI_API_KEY: cfg.xai.key } : {}),
+      ...(cfg.custom?.key ? { CUSTOM_API_KEY: cfg.custom.key } : {}),
+      ...(cfg.custom?.url ? { CUSTOM_API_URL: cfg.custom.url } : {}),
       ...(cfg.box?.token ? { BOX_TOKEN: cfg.box.token } : {}),
       ...entry.environment,
     };

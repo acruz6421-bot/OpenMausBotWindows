@@ -66,6 +66,7 @@ export interface Bot {
 /** GET /api/config — configured flags only; secrets are never echoed. */
 export interface ConfigStatus {
   xai?: { configured: boolean };
+  custom?: { configured: boolean; url?: string };
   composio: { configured: boolean; apiKeyConfigured?: boolean };
   box: { configured: boolean };
 }
