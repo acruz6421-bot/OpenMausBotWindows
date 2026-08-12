@@ -1,0 +1,197 @@
+<div align="center">
+
+# OpenMausBot
+
+**Your own team of AI bots, in a chat app.**
+
+Every bot in the sidebar is a real agent — Claude or Codex running locally under the hood — with its own
+personality, its own model, its own cloud computer, and its own connected apps.
+Talk to them like contacts. Watch them work. Approve what matters.
+
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Electron](https://img.shields.io/badge/Electron-macOS-2B2E3A?logo=electron&logoColor=9FEAF9)
+![Agents](https://img.shields.io/badge/agents-Claude%20·%20Codex-d97757)
+![PRs](https://img.shields.io/badge/PRs-welcome-38d591)
+
+<br>
+
+<a href="https://github.com/milind-soni/openmausbot-releases/releases/latest">
+  <img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20%20Download%20for%20macOS-.dmg-1084fe?style=for-the-badge&labelColor=070707" alt="Download OpenMausBot for macOS" height="40">
+</a>
+
+<sub>Apple silicon · signed & notarized · [all releases](https://github.com/milind-soni/openmausbot-releases/releases)</sub>
+
+<br>
+<br>
+
+<img src="docs/screenshots/hero.png" alt="OpenMausBot — a Telegram-style chat app where every chat is a real AI agent" width="900">
+
+</div>
+
+---
+
+## Why
+
+One assistant in one box is the wrong shape for agents. OpenMausBot treats AI as a *messaging app*: a roster
+of bots you chat with — each with its own personality, memory of its thread, model, computer, and apps — built
+on the agents you already have:
+
+- **Bring your own agents.** Bots run on the `claude` and `codex` CLIs installed on your Mac — your existing
+  logins and subscriptions, no new accounts, no proxy in the middle.
+- **Local first.** One small harness server on `127.0.0.1` owns every agent process. Transcripts, keys, and
+  events live in `~/.openmausbot`, not a cloud.
+- **Agents with hands.** Each bot can get a real computer — a cloud Linux desktop it drives while you watch
+  live, or your own Mac — plus 500+ apps through Composio Connect.
+
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🧠 Pick a brain per bot
+
+A model picker with a provider rail — Claude and Codex models side by side, defaults marked, unavailable
+providers dimmed with the reason. Switch a bot's model mid-conversation.
+
+<img src="docs/screenshots/model-picker.png" alt="Model picker with provider rail" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### 🖥️ Every bot gets a computer
+
+Open the Computer panel and the bot's cloud desktop spins up on its own — live screen preview while it
+works, "Open desktop" to take over in your browser, or point the bot at *this Mac* instead.
+
+<img src="docs/screenshots/computer-panel.png" alt="Computer panel with live screen preview" width="100%">
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🙋 Bots ask before they act
+
+Shell commands, file edits, and questions surface as inline cards — Allow / Deny / answer in chat. A
+permission broker turns every risky action into a decision you make, for cloud and local computers alike.
+
+<img src="docs/screenshots/approval-card.png" alt="Approval and question cards in chat" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### 🔌 Connected apps
+
+A one-click marketplace over Composio Connect: Gmail, Slack, GitHub, Notion, Linear and hundreds more.
+OAuth once, and every bot can use them as tools.
+
+<img src="docs/screenshots/marketplace.png" alt="Connected apps marketplace" width="100%">
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🗂 Manage bots like chats
+
+Right-click any bot: pin, mark unread, edit profile, duplicate, copy conversation ID, hide, delete. It's a
+messaging app — your agents behave like contacts.
+
+<img src="docs/screenshots/context-menu.png" alt="Bot context menu" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### 🔑 Keys once, everything lights up
+
+Paste credentials in App Settings — they persist locally and the provider fleet hot-reloads instantly.
+Secrets are write-only: the UI only ever sees "configured" flags.
+
+<img src="docs/screenshots/app-settings.png" alt="App-level settings with API keys" width="100%">
+
+</td>
+</tr>
+</table>
+
+**Also in the box:** streaming replies with tool-run activity chips · native macOS dictation from the
+composer mic (on-device Apple speech recognition — desktop app) · SupaMaus cursor mascots with role-aware
+expressions · screenshots of the bot's work folded into the transcript.
+
+## How it works
+
+Two processes. The app holds no transports of its own — it sends typed commands over HTTP and folds one SSE
+event stream into state. The harness server owns every agent process and normalizes each provider's native
+protocol into one canonical runtime event stream (logged per-thread as NDJSON).
+
+```mermaid
+flowchart LR
+    subgraph app ["App — React + Tailwind (5199)"]
+        UI[Chat UI · model picker · computer panel]
+    end
+    subgraph server ["Harness server (127.0.0.1:8799)"]
+        REG[Driver registry] --> BUS[Event bus → SSE]
+        BROKER[Permission broker]
+    end
+    subgraph agents ["Agents on your Mac"]
+        CL[claude CLI]
+        CX[codex CLI]
+    end
+    UI -- "HTTP commands" --> server
+    BUS -- "one SSE stream" --> UI
+    REG --> CL & CX
+    CL & CX -- "MCP" --> BROKER
+    server -- "Box API" --> BOX[("Cloud computer<br/>box.ascii.dev")]
+    server -- "Composio Connect" --> APPS[("Gmail · Slack · GitHub · …")]
+```
+
+| Layer | Where | What it does |
+|---|---|---|
+| Drivers | `server/drivers/` | One per provider: Claude and Codex over their local CLIs (stream-JSON / JSON-RPC), plus a cloud-computer agent. Unknown drivers degrade to "unavailable", never crash the fleet. |
+| Harness | `server/harness/` | Registry (configs → live instances) and the fan-in event bus every client folds. |
+| API | `server/index.ts` | Bots, turns, approvals, model catalog, computer lifecycle, connectors, config — HTTP + SSE. |
+| App | `src/` | The chat shell. Server-backed store, one reducer, zero client-side transports. |
+| Desktop | `electron/` | macOS shell: dictation helper (SFSpeechRecognizer), local screen capture, CUA bridge. |
+
+## Quick start
+
+**Easiest:** [download the latest .dmg](https://github.com/milind-soni/openmausbot-releases/releases/latest),
+drag it to Applications, open it. The harness server is embedded — no setup.
+
+**From source:**
+
+```sh
+git clone https://github.com/milind-soni/OpenMausBot && cd OpenMausBot
+pnpm install
+
+pnpm dev:server    # harness server → 127.0.0.1:8799
+pnpm dev           # app → http://127.0.0.1:5199
+pnpm dev:desktop   # or the Electron shell
+```
+
+Requirements: **macOS**, **Node 24+**, **pnpm**, and at least one agent CLI — [`claude`](https://claude.com/claude-code)
+or [`codex`](https://github.com/openai/codex) — installed and logged in. They appear in the model picker
+automatically.
+
+Optional, pasted once in **App Settings** (gear in the sidebar footer):
+
+| Key | Unlocks |
+|---|---|
+| Composio Connect key (`ck_…`) | The connected-apps marketplace |
+| Composio API key (`ak_…`) | The full 500+ app catalog with official logos |
+| Box token ([box.ascii.dev](https://box.ascii.dev)) | Cloud computers for your bots |
+
+```sh
+pnpm typecheck     # app + server
+pnpm build         # typecheck + production build
+```
+
+## Status
+
+Early but real — the loop works end to end: message → agent → streamed reply → tools → approvals →
+computer use. Rough edges to expect: routines (scheduled tasks) are a placeholder, sidebar sections aren't
+built yet, and Windows/Linux shells haven't been attempted (the harness itself is portable Node).
+
+Contributions welcome — the driver SPI in [`server/contracts.ts`](server/contracts.ts) is deliberately
+small; adding a provider is one file in [`server/drivers/`](server/drivers/) plus a one-line registration.
