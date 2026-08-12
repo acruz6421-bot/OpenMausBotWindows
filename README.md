@@ -35,6 +35,7 @@ O OpenMausBot trata a IA como um *aplicativo de mensagens*: uma lista de bots co
 - **Traga seus próprios agentes.** Os bots rodam via CLI (`claude` ou `codex`) instalados no seu computador.
 - **Privacidade Local.** Transcrições, chaves e eventos vivem na sua pasta `%APPDATA%`, não na nuvem.
 - **Ditado por Voz Nativo.** Use o microfone para falar com seus bots através do sistema de reconhecimento de voz do Windows (PowerShell + .NET).
+- **Provedores Customizados.** Suporte a qualquer API compatível com OpenAI, permitindo usar modelos locais (Ollama, LM Studio) ou outros serviços (Groq, Together) via URL personalizada.
 - **Agentes com "Mãos".** Cada bot pode controlar um computador na nuvem ou o seu próprio PC Windows.
 
 ## Como usar no Windows
